@@ -1,4 +1,8 @@
+import 'package:alanwar/models/service.dart';
+import 'package:alanwar/models/trip.dart';
+import 'package:alanwar/services/api.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
 class Home extends StatefulWidget {
@@ -9,16 +13,27 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  String title = '', country = '', airline = '', hotel = '';
-  int seats = 0;
-  double singlePrice = 0,
-      duoPrice = 0,
-      thirdPrice = 0,
-      ticketPrice = 0,
-      chairPrice = 0,
-      weight = 0,
-      privateCarPrice = 0;
-  DateTime departure = DateTime.now(), arrival = DateTime.now();
+  final ApiService _apiService = ApiService();
+  final GlobalKey<FormState> _tripCreateFormKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _servicesAddFormKey = GlobalKey<FormState>();
+  List<Service> services = [];
+  Trip trip = Trip(
+    uid: '',
+    title: '',
+    country: '',
+    hotel: '',
+    employeeEntry: '',
+    airLine: '',
+    seats: 0,
+    tripPrice: 0,
+    weight: 0,
+    departure: DateTime.now(),
+    arrival: DateTime.now(),
+    services: [],
+  );
+
+  String serviceTitle = '';
+  double servicePrice = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -26,138 +41,415 @@ class _HomeState extends State<Home> {
       appBar: AppBar(
         title: const Text('Al Anwar'),
       ),
-      body: Center(
-        child: SizedBox(
-          width: 400,
-          child: Form(
-              child: ListView(
-            children: [
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Trip title',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: const [
-                  Text('Country:'),
-                  CountrySelector(),
-                  Text('Hotel:'),
-                  HotelSelector(),
-                ],
-              ),
-              Wrap(
-                alignment: WrapAlignment.start,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  const Text('Airline:'),
-                  const SizedBox(
-                    width: 12.0,
-                  ),
-                  const AirlineSelector(),
-                  const SizedBox(
-                    width: 12.0,
-                  ),
-                  SizedBox(
-                    width: 75.0,
-                    height: 30.0,
-                    child: TextFormField(
-                      decoration: const InputDecoration(
-                        labelText: 'Seats',
-                        border: OutlineInputBorder(),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 400,
+              child: Form(
+                  key: _tripCreateFormKey,
+                  child: ListView(
+                    children: [
+                      TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: 'Trip title',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Required';
+                          }
+                          return null;
+                        },
+                        onChanged: (value) {
+                          setState(() {
+                            trip.title = value;
+                          });
+                        },
+                      ),
+                      const SizedBox(
+                        height: 12.0,
+                      ),
+                      Wrap(
+                        alignment: WrapAlignment.start,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          const Text('Airline:'),
+                          const SizedBox(
+                            width: 12.0,
+                          ),
+                          AirlineSelector(
+                            parentWidgetNotify: airlineUpdate,
+                          ),
+                          const SizedBox(
+                            width: 12.0,
+                          ),
+                          SizedBox(
+                            width: 100.0,
+                            child: TextFormField(
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Required';
+                                }
+                                if (!value.isNumeric()) {
+                                  return 'Only numbers allowed';
+                                }
+                              },
+                              onChanged: (value) {
+                                setState(() {
+                                  trip.seats = int.parse(value);
+                                });
+                              },
+                              decoration: const InputDecoration(
+                                labelText: 'Seats',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 12.0,
+                          ),
+                          SizedBox(
+                            width: 100.0,
+                            child: TextFormField(
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Required';
+                                }
+                                if (!value.isNumeric()) {
+                                  return 'Only numbers allowed';
+                                }
+                                return null;
+                              },
+                              onChanged: (value) {
+                                setState(() {
+                                  trip.weight = double.parse(value);
+                                });
+                              },
+                              decoration: const InputDecoration(
+                                labelText: 'Maximum weight',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 12.0,
+                      ),
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          const Text('Country:'),
+                          CountrySelector(
+                            parentWidgetNotify: countryUpdate,
+                          ),
+                          const Text('Hotel:'),
+                          HotelSelector(
+                            parentWidgetNotify: hotelUpdate,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 12.0,
+                      ),
+                      const Text('Departure and return'),
+                      DepartureReturnDatePicker(
+                        parentWidgetNotify: departureReturnUpdate,
+                      ),
+                      Wrap(
+                        children: [
+                          SizedBox(
+                            width: 100.0,
+                            child: TextFormField(
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Required';
+                                }
+                                if (!value.isNumeric()) {
+                                  return 'Only numbers allowed';
+                                }
+                                return null;
+                              },
+                              onChanged: (value) {
+                                setState(() {
+                                  trip.tripPrice = double.parse(value);
+                                });
+                              },
+                              decoration: const InputDecoration(
+                                labelText: 'Trip price',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 12.0,
+                      ),
+                      SizedBox(
+                        width: 100.0,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            if (_tripCreateFormKey.currentState!.validate()) {
+                              setState(() {
+                                trip.services = services;
+                              });
+                              await _apiService.createTrip(trip);
+                            }
+                          },
+                          child: const Text('Create'),
+                        ),
+                      ),
+                    ],
+                  )),
+            ),
+            const SizedBox(
+              width: 12.0,
+            ),
+            SizedBox(
+              width: 400,
+              child: Form(
+                  key: _servicesAddFormKey,
+                  child: ListView(
+                    children: [
+                      TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: 'Trip title',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Required';
+                          }
+                          return null;
+                        },
+                        onChanged: (value) {
+                          serviceTitle = value;
+                        },
+                      ),
+                      const SizedBox(
+                        height: 12.0,
+                      ),
+                      Wrap(
+                        alignment: WrapAlignment.start,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 100.0,
+                            child: TextFormField(
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Required';
+                                }
+                                if (!value.isNumeric()) {
+                                  return 'Only numbers allowed';
+                                }
+                              },
+                              onChanged: (value) {
+                                servicePrice = double.parse(value);
+                              },
+                              decoration: const InputDecoration(
+                                labelText: 'Price',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 12.0,
+                          ),
+                          SizedBox(
+                            width: 100.0,
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                if (_servicesAddFormKey.currentState!
+                                    .validate()) {
+                                  setState(() {
+                                    services.add(Service(
+                                        uid: '',
+                                        title: serviceTitle,
+                                        price: servicePrice,
+                                        employeeEntry: ''));
+                                  });
+                                }
+                              },
+                              child: const Text('Add'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: services.length,
+                          itemBuilder: (context, index) {
+                            return ListTile(
+                              title: Text(services[index].title),
+                              subtitle: Text(services[index].price.toString()),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete_forever_rounded),
+                                onPressed: () {
+                                  setState(() {
+                                    services.remove(services[index]);
+                                  });
+                                },
+                              ),
+                            );
+                          }),
+                      const SizedBox(
+                        height: 12.0,
+                      ),
+                    ],
+                  )),
+            ),
+            const SizedBox(
+              width: 12.0,
+            ),
+            SizedBox(
+              width: 300.0,
+              height: 607.0,
+              child: Card(
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.airplanemode_active_rounded),
+                      title: Text('${trip.country} - ${trip.title}'),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${trip.airLine} airline - ${trip.seats} seats',
+                            style:
+                                TextStyle(color: Colors.black.withOpacity(0.6)),
+                          ),
+                          Text(
+                            '${trip.weight} Max Weight',
+                            style:
+                                TextStyle(color: Colors.black.withOpacity(0.6)),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const Text('Departure and return'),
-              const DepartureReturnDatePicker(),
-              Wrap(children: [
-                SizedBox(
-                  width: 100.0,
-                  child: TextFormField(
-                    decoration: const InputDecoration(
-                      labelText: 'Ticket price',
-                      border: OutlineInputBorder(),
+                    ListTile(
+                      leading: const Icon(Icons.date_range_rounded),
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            children: [
+                              const Text('Departure'),
+                              Text(trip.departure != null
+                                  ? trip.departure!.onlyDate()
+                                  : ''),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              const Text('Return'),
+                              Text(trip.arrival != null
+                                  ? trip.arrival!.onlyDate()
+                                  : ''),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-                SizedBox(
-                  width: 100.0,
-                  child: TextFormField(
-                    decoration: const InputDecoration(
-                      labelText: 'Single passenger price',
-                      border: OutlineInputBorder(),
+                    ListTile(
+                      leading: const Icon(Icons.local_hotel_rounded),
+                      title: Text(trip.hotel),
+                      subtitle: Text(
+                        '${trip.departure != null && trip.arrival != null ? trip.arrival!.difference(trip.departure!).inDays : ''} Nights',
+                        style: TextStyle(color: Colors.black.withOpacity(0.6)),
+                      ),
                     ),
-                  ),
-                ),
-                SizedBox(
-                  width: 100.0,
-                  child: TextFormField(
-                    decoration: const InputDecoration(
-                      labelText: 'Duo passengers price',
-                      border: OutlineInputBorder(),
+                    ListTile(
+                      leading: const Icon(Icons.monetization_on_outlined),
+                      title: Text('\$${trip.tripPrice}'),
+                      subtitle: Text(
+                        '\$${trip.tripPrice + 30} for single passenger',
+                        style: TextStyle(color: Colors.black.withOpacity(0.6)),
+                      ),
                     ),
-                  ),
-                ),
-                SizedBox(
-                  width: 100.0,
-                  child: TextFormField(
-                    decoration: const InputDecoration(
-                      labelText: 'Three or more passengers price',
-                      border: OutlineInputBorder(),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        'Make sure you are vaccinated and up to date with your COVID-19 vaccines before traveling to Iran.',
+                        style: TextStyle(color: Colors.black.withOpacity(0.6)),
+                      ),
                     ),
-                  ),
-                ),
-              ],),
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Chair price',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(
-                width: 75.0,
-                child: TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Private car price',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: 75.0,
-                child: TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Maximum weight',
-                    border: OutlineInputBorder(),
-                  ),
+                    ListTile(
+                      leading: const Icon(Icons.list_alt_rounded),
+                      title: const Text('Services'),
+                      subtitle: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: trip.services.length,
+                        itemBuilder: (context, index){
+                          return Text(
+                            '\$${trip.services[index].price} ${trip.services[index].title}',
+                            style:
+                            TextStyle(color: Colors.black.withOpacity(0.6)),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          )),
+            ),
+          ],
         ),
       ),
     );
   }
+
+  void countryUpdate(String value) {
+    setState(() {
+      trip.country = value;
+    });
+  }
+
+  void hotelUpdate(String value) {
+    setState(() {
+      trip.hotel = value;
+    });
+  }
+
+  void airlineUpdate(String value) {
+    setState(() {
+      trip.airLine = value;
+    });
+  }
+
+  void departureReturnUpdate(DateTime value1, value2) {
+    setState(() {
+      trip.departure = value1;
+      trip.arrival = value2;
+    });
+  }
 }
 
 class CountrySelector extends StatefulWidget {
-  const CountrySelector({Key? key}) : super(key: key);
+  final Function parentWidgetNotify;
+
+  const CountrySelector({Key? key, required this.parentWidgetNotify})
+      : super(key: key);
 
   @override
   State<CountrySelector> createState() => _CountrySelectorState();
 }
 
 class _CountrySelectorState extends State<CountrySelector> {
-  String dropdownValue = 'Iran';
+  String? dropdownValue;
   List<String> dropdownList = ['Iran', 'Iraq', 'KSA', 'Syrian'];
 
   @override
   Widget build(BuildContext context) {
     return DropdownButton<String>(
+      hint: const Text('Choose'),
       value: dropdownValue,
       elevation: 16,
       style: const TextStyle(color: Colors.deepPurple),
@@ -168,6 +460,7 @@ class _CountrySelectorState extends State<CountrySelector> {
       onChanged: (String? newValue) {
         setState(() {
           dropdownValue = newValue!;
+          widget.parentWidgetNotify(dropdownValue);
         });
       },
       items: dropdownList.map<DropdownMenuItem<String>>((String value) {
@@ -181,19 +474,23 @@ class _CountrySelectorState extends State<CountrySelector> {
 }
 
 class HotelSelector extends StatefulWidget {
-  const HotelSelector({Key? key}) : super(key: key);
+  final Function parentWidgetNotify;
+
+  const HotelSelector({Key? key, required this.parentWidgetNotify})
+      : super(key: key);
 
   @override
   State<HotelSelector> createState() => _HotelSelectorState();
 }
 
 class _HotelSelectorState extends State<HotelSelector> {
-  String dropdownValue = 'Negin';
+  String? dropdownValue;
   List<String> dropdownList = ['Negin', 'Al Ridha', 'Fairmont Makkah'];
 
   @override
   Widget build(BuildContext context) {
     return DropdownButton<String>(
+      hint: const Text('Choose'),
       value: dropdownValue,
       elevation: 16,
       style: const TextStyle(color: Colors.deepPurple),
@@ -204,6 +501,7 @@ class _HotelSelectorState extends State<HotelSelector> {
       onChanged: (String? newValue) {
         setState(() {
           dropdownValue = newValue!;
+          widget.parentWidgetNotify(newValue);
         });
       },
       items: dropdownList.map<DropdownMenuItem<String>>((String value) {
@@ -217,19 +515,23 @@ class _HotelSelectorState extends State<HotelSelector> {
 }
 
 class AirlineSelector extends StatefulWidget {
-  const AirlineSelector({Key? key}) : super(key: key);
+  final Function parentWidgetNotify;
+
+  const AirlineSelector({Key? key, required this.parentWidgetNotify})
+      : super(key: key);
 
   @override
   State<AirlineSelector> createState() => _AirlineSelectorState();
 }
 
 class _AirlineSelectorState extends State<AirlineSelector> {
-  String dropdownValue = 'Kuwaitia';
+  String? dropdownValue;
   List<String> dropdownList = ['Kuwaitia', 'Huma', 'Al Jazeera'];
 
   @override
   Widget build(BuildContext context) {
     return DropdownButton<String>(
+      hint: const Text('Choose'),
       value: dropdownValue,
       elevation: 16,
       style: const TextStyle(color: Colors.deepPurple),
@@ -240,6 +542,7 @@ class _AirlineSelectorState extends State<AirlineSelector> {
       onChanged: (String? newValue) {
         setState(() {
           dropdownValue = newValue!;
+          widget.parentWidgetNotify(newValue);
         });
       },
       items: dropdownList.map<DropdownMenuItem<String>>((String value) {
@@ -253,10 +556,15 @@ class _AirlineSelectorState extends State<AirlineSelector> {
 }
 
 class DepartureReturnDatePicker extends StatelessWidget {
-  const DepartureReturnDatePicker({Key? key}) : super(key: key);
+  final Function parentWidgetNotify;
+
+  const DepartureReturnDatePicker({Key? key, required this.parentWidgetNotify})
+      : super(key: key);
 
   void _onSelectionChanged(DateRangePickerSelectionChangedArgs args) {
-    // TODO: implement your code here
+    DateTime? startDate = args.value.startDate;
+    DateTime? endDate = args.value.endDate ?? args.value.startDate;
+    parentWidgetNotify(startDate, endDate);
   }
 
   @override
@@ -265,5 +573,19 @@ class DepartureReturnDatePicker extends StatelessWidget {
       onSelectionChanged: _onSelectionChanged,
       selectionMode: DateRangePickerSelectionMode.range,
     );
+  }
+}
+
+extension DateOnlyCompare on DateTime {
+  String onlyDate() {
+    final DateFormat formatter = DateFormat('yyyy-MM-dd');
+    final String formatted = formatter.format(this);
+    return formatted;
+  }
+}
+
+extension StringUtili on String {
+  bool isNumeric() {
+    return double.tryParse(this) != null;
   }
 }
