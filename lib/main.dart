@@ -1,7 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
-import 'pages/home.dart';
+import 'pages/create_trip_form.dart';
+import 'pages/mainPage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,6 +42,6 @@ class PageController extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Home();
+    return const MainPage();
   }
 }

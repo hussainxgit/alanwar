@@ -5,14 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
-class Home extends StatefulWidget {
-  const Home({Key? key}) : super(key: key);
+class CreateTripForm extends StatefulWidget {
+  const CreateTripForm({Key? key}) : super(key: key);
 
   @override
-  State<Home> createState() => _HomeState();
+  State<CreateTripForm> createState() => _CreateTripFormState();
 }
 
-class _HomeState extends State<Home> {
+class _CreateTripFormState extends State<CreateTripForm> {
   final ApiService _apiService = ApiService();
   final GlobalKey<FormState> _tripCreateFormKey = GlobalKey<FormState>();
   final GlobalKey<FormState> _servicesAddFormKey = GlobalKey<FormState>();
@@ -34,14 +34,31 @@ class _HomeState extends State<Home> {
 
   String serviceTitle = '';
   double servicePrice = 0;
+  late ScrollController _scrollController;
+
+  //Offset state <-------------------------------------
+  double offset = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    //print("init state is called");
+
+    _scrollController = ScrollController() //keepScrollOffset: false removed
+      ..addListener(() {
+        setState(() {
+          //<-----------------------------
+          offset = _scrollController.offset;
+          // force a refresh so the app bar can be updated
+        });
+      });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Al Anwar'),
-      ),
-      body: Padding(
+    return SingleChildScrollView(
+      controller: _scrollController,
+      child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -51,7 +68,8 @@ class _HomeState extends State<Home> {
               width: 400,
               child: Form(
                   key: _tripCreateFormKey,
-                  child: ListView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       TextFormField(
                         decoration: const InputDecoration(
@@ -216,6 +234,7 @@ class _HomeState extends State<Home> {
               child: Form(
                   key: _servicesAddFormKey,
                   child: ListView(
+                    shrinkWrap: true,
                     children: [
                       TextFormField(
                         decoration: const InputDecoration(
@@ -307,98 +326,6 @@ class _HomeState extends State<Home> {
             ),
             const SizedBox(
               width: 12.0,
-            ),
-            SizedBox(
-              width: 300.0,
-              height: 607.0,
-              child: Card(
-                clipBehavior: Clip.antiAlias,
-                child: Column(
-                  children: [
-                    ListTile(
-                      leading: const Icon(Icons.airplanemode_active_rounded),
-                      title: Text('${trip.country} - ${trip.title}'),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${trip.airLine} airline - ${trip.seats} seats',
-                            style:
-                                TextStyle(color: Colors.black.withOpacity(0.6)),
-                          ),
-                          Text(
-                            '${trip.weight} Max Weight',
-                            style:
-                                TextStyle(color: Colors.black.withOpacity(0.6)),
-                          ),
-                        ],
-                      ),
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.date_range_rounded),
-                      title: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            children: [
-                              const Text('Departure'),
-                              Text(trip.departure != null
-                                  ? trip.departure!.onlyDate()
-                                  : ''),
-                            ],
-                          ),
-                          Column(
-                            children: [
-                              const Text('Return'),
-                              Text(trip.arrival != null
-                                  ? trip.arrival!.onlyDate()
-                                  : ''),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.local_hotel_rounded),
-                      title: Text(trip.hotel),
-                      subtitle: Text(
-                        '${trip.departure != null && trip.arrival != null ? trip.arrival!.difference(trip.departure!).inDays : ''} Nights',
-                        style: TextStyle(color: Colors.black.withOpacity(0.6)),
-                      ),
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.monetization_on_outlined),
-                      title: Text('\$${trip.tripPrice}'),
-                      subtitle: Text(
-                        '\$${trip.tripPrice + 30} for single passenger',
-                        style: TextStyle(color: Colors.black.withOpacity(0.6)),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        'Make sure you are vaccinated and up to date with your COVID-19 vaccines before traveling to Iran.',
-                        style: TextStyle(color: Colors.black.withOpacity(0.6)),
-                      ),
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.list_alt_rounded),
-                      title: const Text('Services'),
-                      subtitle: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: trip.services.length,
-                        itemBuilder: (context, index){
-                          return Text(
-                            '\$${trip.services[index].price} ${trip.services[index].title}',
-                            style:
-                            TextStyle(color: Colors.black.withOpacity(0.6)),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ),
           ],
         ),
