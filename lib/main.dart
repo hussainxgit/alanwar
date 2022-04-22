@@ -1,7 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
-import 'pages/create_trip_form.dart';
+import 'pages/trips/create_trip_form.dart';
 import 'pages/mainPage.dart';
 
 void main() async {

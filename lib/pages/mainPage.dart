@@ -1,4 +1,4 @@
-import '/pages/page_1.dart';
+import 'trips/page_1.dart';
 import 'package:flutter/material.dart';
 
 class MainPage extends StatefulWidget {

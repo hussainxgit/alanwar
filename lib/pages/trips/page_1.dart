@@ -1,4 +1,5 @@
-import 'package:alanwar/pages/create_trip_form.dart';
+import 'package:alanwar/pages/trips/available_trips.dart';
+import 'package:alanwar/pages/trips/create_trip_form.dart';
 import 'package:flutter/material.dart';
 
 class Page1 extends StatefulWidget {
@@ -11,11 +12,22 @@ class Page1 extends StatefulWidget {
 class _Page1State extends State<Page1> with TickerProviderStateMixin {
   int _selectedIndex = 0;
   late TabController _tabController;
+  late ScrollController _scrollController;
+  //Offset state <-------------------------------------
+  double offset = 0.0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _scrollController = ScrollController() //keepScrollOffset: false removed
+      ..addListener(() {
+        setState(() {
+          //<-----------------------------
+          offset = _scrollController.offset;
+          // force a refresh so the app bar can be updated
+        });
+      });
   }
 
   @override
@@ -76,12 +88,13 @@ class _Page1State extends State<Page1> with TickerProviderStateMixin {
             ],
           ),
         ),
+        //todo: removing expanded or parent width
         Expanded(
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14.0),
+            margin: const EdgeInsets.symmetric(horizontal: 30.0),
             child: TabBarView(controller: _tabController, children: const [
               CreateTripForm(),
-              SizedBox(),
+              AvailableTrips(),
               SizedBox(),
             ]),
           ),
