@@ -1,4 +1,5 @@
 import 'package:alanwar/pages/trips/available_trips.dart';
+import 'package:alanwar/pages/trips/book_trip.dart';
 import 'package:alanwar/pages/trips/create_trip_form.dart';
 import 'package:flutter/material.dart';
 
@@ -19,7 +20,7 @@ class _Page1State extends State<Page1> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _scrollController = ScrollController() //keepScrollOffset: false removed
       ..addListener(() {
         setState(() {
@@ -85,6 +86,22 @@ class _Page1State extends State<Page1> with TickerProviderStateMixin {
                           side: const BorderSide(color: Colors.black, width: 1),
                           borderRadius: BorderRadius.circular(7))
                       : null),
+              const SizedBox(
+                height: 14.0,
+              ),
+              ListTile(
+                  title: const Text('Book trip'),
+                  onTap: () {
+                    setState(() {
+                      _selectedIndex = 3;
+                      _tabController.index = _selectedIndex;
+                    });
+                  },
+                  shape: _selectedIndex == 3
+                      ? RoundedRectangleBorder(
+                      side: const BorderSide(color: Colors.black, width: 1),
+                      borderRadius: BorderRadius.circular(7))
+                      : null),
             ],
           ),
         ),
@@ -96,7 +113,8 @@ class _Page1State extends State<Page1> with TickerProviderStateMixin {
             child: TabBarView(controller: _tabController, children: const [
               CreateTripForm(),
               Align(alignment:Alignment.centerLeft, child: SizedBox(width:400, child: AvailableTrips())),
-              SizedBox(),
+              SizedBox.shrink(),
+              BookTripForm(),
             ]),
           ),
         ),

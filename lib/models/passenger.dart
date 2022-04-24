@@ -1,5 +1,5 @@
 class Passenger {
-  String uid, name, phone, employeeEntry, hotel, groupUid, note, passportStatus;
+  String uid, name, phone, employeeEntry, hotel, groupUid, note, passportStatus, visaStatus, nationality;
   double totalPaid, remainingFees;
 
   Passenger(
@@ -11,6 +11,8 @@ class Passenger {
         required this.groupUid,
         required this.note,
         required this.passportStatus,
+        required this.visaStatus,
+        required this.nationality,
         required this.totalPaid,
         required this.remainingFees});
 }

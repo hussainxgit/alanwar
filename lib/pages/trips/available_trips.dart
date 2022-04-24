@@ -13,7 +13,22 @@ class AvailableTrips extends StatefulWidget {
 
 class _AvailableTripsState extends State<AvailableTrips> {
   final ApiService _apiService = ApiService();
+  late ScrollController _scrollController;
+  //Offset state <-------------------------------------
+  double offset = 0.0;
 
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController() //keepScrollOffset: false removed
+      ..addListener(() {
+        setState(() {
+          //<-----------------------------
+          offset = _scrollController.offset;
+          // force a refresh so the app bar can be updated
+        });
+      });
+  }
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
@@ -29,6 +44,7 @@ class _AvailableTripsState extends State<AvailableTrips> {
                     (e) => Trip.fromMap(e.data() as Map<String, dynamic>, e.id))
                 .toList();
             return ListView.builder(
+              controller: _scrollController,
                 itemCount: tripList.length,
                 itemBuilder: (BuildContext context, index) {
                   return Container(
