@@ -287,7 +287,6 @@ class _CreateTripFormState extends State<CreateTripForm> {
                                   .validate()) {
                                 setState(() {
                                   services.add(Service(
-                                      uid: '',
                                       title: serviceTitle,
                                       price: servicePrice,
                                       employeeEntry: ''));

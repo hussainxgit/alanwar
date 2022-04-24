@@ -89,12 +89,13 @@ class _Page1State extends State<Page1> with TickerProviderStateMixin {
           ),
         ),
         //todo: removing expanded or parent width
-        Expanded(
+        Flexible(
+          fit: FlexFit.loose,
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 30.0),
             child: TabBarView(controller: _tabController, children: const [
               CreateTripForm(),
-              AvailableTrips(),
+              Align(alignment:Alignment.centerLeft, child: SizedBox(width:400, child: AvailableTrips())),
               SizedBox(),
             ]),
           ),

@@ -1,9 +1,9 @@
 class Service {
-  String uid, title, employeeEntry;
+ String title, employeeEntry;
   double price;
 
   Service(
-      {required this.uid,
+      {
         required this.title,
         required this.price,
         required this.employeeEntry});
@@ -16,9 +16,8 @@ class Service {
     };
   }
 
-  factory Service.fromMap(Map<String, dynamic> map, String uid) {
+  factory Service.fromMap(Map<String, dynamic> map) {
     return Service(
-      uid: uid,
       title: map['title'] as String,
       employeeEntry: map['employeeEntry'] as String,
       price: map['price'] as double,

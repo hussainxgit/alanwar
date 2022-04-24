@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'service.dart';
 
 class Trip {
@@ -50,9 +52,9 @@ class Trip {
       seats: map['seats'] as int,
       tripPrice: map['tripPrice'] as double,
       weight: map['weight'] as double,
-      departure: map['departure'] as DateTime,
-      arrival: map['arrival'] as DateTime,
-      services: map['services'] as List<Service>,
+      departure: (map['departure'] as Timestamp).toDate(),
+      arrival: (map['arrival'] as Timestamp).toDate(),
+      services: (map['services'] as List<dynamic>).map((e) => Service.fromMap(e)).toList(),
     );
   }
 }
